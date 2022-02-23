@@ -207,11 +207,18 @@ def train():
         data_t = next(data_iter_t)
         data_t_unl = next(data_iter_t_unl)
         data_s = next(data_iter_s)
+        '''
         im_data_s.data.resize_(data_s[0].size()).copy_(data_s[0])
         gt_labels_s.data.resize_(data_s[1].size()).copy_(data_s[1])
         im_data_t.data.resize_(data_t[0].size()).copy_(data_t[0])
         gt_labels_t.data.resize_(data_t[1].size()).copy_(data_t[1])
         im_data_tu.data.resize_(data_t_unl[0].size()).copy_(data_t_unl[0])
+        '''
+        im_data_s = data_s[0].cuda()
+        gt_labels_s = data_s[1].cuda()
+        im_data_t = data_t[0].cuda()
+        gt_labels_t = data_t[1].cuda()
+        im_data_tu = data_t_unl[0].cuda()
         zero_grad_all()
         
         data = torch.cat((im_data_s, im_data_t), 0)
@@ -223,8 +230,11 @@ def train():
         output_t = G(im_data_t)
         out_t = F1(output_t)
 
+
+
         loss_s = criterion(out_s, gt_labels_s) 
         loss_t = criterion(out_t, gt_labels_t) 
+
 
         loss = 0.75 * loss_s + 0.25 * loss_t
 
@@ -239,8 +249,12 @@ def train():
         output_s = G(im_data_s)
         out_s = F2(output_s)
 
+        out_t1 = F1(output_t)
+
+
         loss_s = criterion(out_s, gt_labels_s) 
         loss_t = criterion(out_t, gt_labels_t) 
+
         
         loss = (0.25 * loss_s + 0.75 * loss_t) 
 
@@ -322,17 +336,17 @@ def train():
                 f.write('step %d best %f final %f \n' % (step,
                                                          best_acc_test,
                                                          acc_val))
-            if args.save_check:
-                if not os.path.exists(args.save_check):
-                    os.makedirs(args.save_check)
+            # if args.save_check:
+            #     if not os.path.exists(args.save_check):
+            #         os.makedirs(args.save_check)
 
-                print('saving model')
-                torch.save(G.state_dict(), os.path.join(args.checkpath,
-                                                          "G_iter_model_{}_{}_to_{}_step_{}.pth.tar".format(
-                                                              args.method, args.source, args.target, step)))
-                torch.save(F2.state_dict(),
-                           os.path.join(args.checkpath, "F2_iter_model_{}_{}_to_{}_step_{}.pth.tar".format(
-                               args.method, args.source, args.target, step)))
+            #     print('saving model')
+            #     torch.save(G.state_dict(), os.path.join(args.checkpath,
+            #                                               "G_iter_model_{}_{}_to_{}_step_{}.pth.tar".format(
+            #                                                   args.method, args.source, args.target, step)))
+            #     torch.save(F2.state_dict(),
+            #                os.path.join(args.checkpath, "F2_iter_model_{}_{}_to_{}_step_{}.pth.tar".format(
+            #                    args.method, args.source, args.target, step)))
 
             time_for_one_saving = time.time() - time_last_save
             time_last_save = time.time()
